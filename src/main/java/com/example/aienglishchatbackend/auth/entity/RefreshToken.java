@@ -2,12 +2,18 @@ package com.example.aienglishchatbackend.auth.entity;
 
 import com.example.aienglishchatbackend.user.entity.User;
 import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "refresh_tokens")
+@Builder
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class RefreshToken {
 
     @Id
@@ -32,6 +38,7 @@ public class RefreshToken {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @Builder.Default
     @Column(name = "is_revoked", nullable = false)
     private Boolean isRevoked = false;
 
