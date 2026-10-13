@@ -2,6 +2,7 @@ package com.example.aienglishchatbackend.auth.service;
 
 import com.example.aienglishchatbackend.auth.dto.internal.AuthResponseInternal;
 import com.example.aienglishchatbackend.auth.dto.req.AuthRequest;
+import com.example.aienglishchatbackend.auth.entity.RefreshToken;
 import com.example.aienglishchatbackend.common.exception.InvalidCredentialsException;
 import com.example.aienglishchatbackend.common.exception.ResourceAlreadyExist;
 import com.example.aienglishchatbackend.common.exception.ResourceNotFound;
@@ -63,5 +64,30 @@ public class AuthService {
         refreshTokenService.saveOrUpdateRefreshToken(user, refreshTokenStr, userAgent);
 
         return new AuthResponseInternal(user, accessToken, refreshTokenStr);
+    }
+
+    @Transactional
+    public AuthResponseInternal refresh(String refreshTokenStr, String userAgent) {
+        RefreshToken oldToken = refreshTokenService.findValidToken(refreshTokenStr);
+        User user = oldToken.getUser();
+
+        refreshTokenService.revokeToken(refreshTokenStr);
+
+        String newAccessToken = jwtService.generateAccessToken(user);
+        String newRefreshTokenStr = jwtService.generateRefreshToken(user);
+
+        refreshTokenService.saveOrUpdateRefreshToken(user, newRefreshTokenStr, userAgent);
+
+        return new AuthResponseInternal(user, newAccessToken, newRefreshTokenStr);
+    }
+
+    @Transactional
+    public void logout(String refreshTokenStr) {
+        refreshTokenService.revokeToken(refreshTokenStr);
+    }
+
+    @Transactional
+    public void logoutAll(User user) {
+        refreshTokenService.revokeAllUserTokens(user);
     }
 }

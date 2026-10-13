@@ -2,6 +2,7 @@ package com.example.aienglishchatbackend.auth.service;
 
 import com.example.aienglishchatbackend.auth.entity.RefreshToken;
 import com.example.aienglishchatbackend.auth.repository.RefreshTokenRepository;
+import com.example.aienglishchatbackend.common.exception.InvalidCredentialsException;
 import com.example.aienglishchatbackend.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,8 +21,7 @@ public class RefreshTokenService {
 
     @Transactional
     public RefreshToken saveOrUpdateRefreshToken(User user, String refreshTokenStr, String userAgent) {
-        String sha256Hex = DigestUtils.sha256Hex(refreshTokenStr);
-        String tokenHash = passwordEncoder.encode(sha256Hex);
+        String tokenHash = hashToken(refreshTokenStr);
         LocalDateTime expiresAt = LocalDateTime.now().plusDays(7);
 
         return refreshTokenRepository.findByUserAndDeviceInfo(user, userAgent)
@@ -41,5 +41,34 @@ public class RefreshTokenService {
                             .build();
                     return refreshTokenRepository.save(newWithBuilder);
                 });
+    }
+
+    @Transactional(readOnly = true)
+    public RefreshToken findValidToken(String refreshTokenStr) {
+        String tokenHash = hashToken(refreshTokenStr);
+
+        RefreshToken token = refreshTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(() -> new InvalidCredentialsException("Недействительный refresh-токен"));
+
+        if (!token.isValid()) {
+            throw new InvalidCredentialsException("Refresh-токен истёк или отозван");
+        }
+
+        return token;
+    }
+
+    @Transactional
+    public void revokeToken(String refreshTokenStr) {
+        String tokenHash = hashToken(refreshTokenStr);
+        refreshTokenRepository.revokeByTokenHash(tokenHash);
+    }
+
+    @Transactional
+    public void revokeAllUserTokens(User user) {
+        refreshTokenRepository.revokeAllByUser(user);
+    }
+
+    private String hashToken(String rawToken) {
+        return DigestUtils.sha256Hex(rawToken);
     }
 }
