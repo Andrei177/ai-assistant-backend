@@ -5,6 +5,7 @@ import com.example.aienglishchatbackend.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 public class Message {
 
     @Id
@@ -25,6 +27,9 @@ public class Message {
 
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Column(name = "audio_url", length = 512)
+    private String audioUrl;   // null для TEXT, URL/path для VOICE
 
     @Enumerated(EnumType.STRING)
     @Column(name = "content_type", nullable = false, length = 20)
