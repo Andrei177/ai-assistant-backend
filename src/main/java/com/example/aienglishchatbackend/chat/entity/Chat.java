@@ -3,9 +3,7 @@ package com.example.aienglishchatbackend.chat.entity;
 import com.example.aienglishchatbackend.message.entity.Message;
 import com.example.aienglishchatbackend.user.entity.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -18,6 +16,8 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class Chat {
 
     @Id
