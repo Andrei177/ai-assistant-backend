@@ -1,0 +1,4 @@
+llm.provider=groq
+llm.groq.base-url=https://api.groq.com/openai/v1
+llm.groq.api-key=${GROQ_API_KEY}
+llm.groq.model=llama-3.3-70b-versatile

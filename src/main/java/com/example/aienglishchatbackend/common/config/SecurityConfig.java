@@ -34,7 +34,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/refresh"
                         ).permitAll()
-                        .requestMatchers("/ws/**").permitAll() // JWT проверяется при handshake
+                        .requestMatchers("/ws/**").permitAll() // JWT проверяется после установки соединения при первом сообщение от клиента
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

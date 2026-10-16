@@ -29,7 +29,7 @@ public class ChatService {
     }
 
     public Chat getChatById(Long chatId, User user) {
-        return chatRepository.findByChatIdAndUser_UserId(chatId, user.getUserId())
+        return chatRepository.findByChatIdAndUserUserId(chatId, user.getUserId())
                 .orElseThrow(() -> new ResourceNotFound("Чат не найден"));
     }
 
