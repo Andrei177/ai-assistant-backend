@@ -14,6 +14,7 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -21,9 +22,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
 import java.time.Duration;
 import java.util.List;
 import java.util.function.Consumer;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 public class GroqLlmClient implements LlmClient {
 
@@ -42,9 +46,35 @@ public class GroqLlmClient implements LlmClient {
         this.groqProperties = groqProperties;
         this.llmProperties = llmProperties;
         this.objectMapper = objectMapper;
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(10))
-                .build();
+        this.httpClient = createHttpClient(groqProperties);
+    }
+
+    private static HttpClient createHttpClient(GroqProperties properties) {
+        HttpClient.Builder builder = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10));
+
+        if (properties.getTrustStorePath() != null && !properties.getTrustStorePath().isBlank()) {
+            try {
+                KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+                char[] password = properties.getTrustStorePassword() != null
+                        ? properties.getTrustStorePassword().toCharArray()
+                        : null;
+                try (FileInputStream fis = new FileInputStream(properties.getTrustStorePath())) {
+                    keyStore.load(fis, password);
+                }
+
+                TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                tmf.init(keyStore);
+
+                SSLContext sslContext = SSLContext.getInstance("TLS");
+                sslContext.init(null, tmf.getTrustManagers(), null);
+                builder.sslContext(sslContext);
+            } catch (Exception e) {
+                log.error("Failed to configure custom trust store for Groq client", e);
+            }
+        }
+
+        return builder.build();
     }
 
     @Override
@@ -164,15 +194,25 @@ public class GroqLlmClient implements LlmClient {
         root.put("model", model);
         root.put("stream", stream);
 
-        double temperature = options.getTemperature() != null
+        Double temperature = options.getTemperature() != null
                 ? options.getTemperature()
                 : llmProperties.getDefaults().getTemperature();
-        root.put("temperature", temperature);
+        if (temperature != null) {
+            root.put("temperature", temperature);
+        }
 
-        int maxTokens = options.getMaxTokens() != null
-                ? options.getMaxTokens()
-                : llmProperties.getDefaults().getMaxTokens();
-        root.put("max_tokens", maxTokens);
+        Integer maxTokens = options.getMaxTokens();
+        if (maxTokens == null) {
+            maxTokens = groqProperties.getMaxTokens();
+        } else if (groqProperties.getMaxTokens() != null) {
+            maxTokens = Math.min(maxTokens, groqProperties.getMaxTokens());
+        }
+        if (maxTokens == null) {
+            maxTokens = llmProperties.getDefaults().getMaxTokens();
+        }
+        if (maxTokens != null && maxTokens > 0) {
+            root.put("max_tokens", maxTokens);
+        }
 
         if (options.getTopP() != null) {
             root.put("top_p", options.getTopP());

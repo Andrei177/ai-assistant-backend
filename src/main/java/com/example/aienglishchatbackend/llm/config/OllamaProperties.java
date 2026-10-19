@@ -11,4 +11,7 @@ public class OllamaProperties {
 
     private String baseUrl = "http://localhost:11434";
     private String model = "llama3.2";
+    private Integer maxTokens;
+    private String trustStorePath;
+    private String trustStorePassword;
 }

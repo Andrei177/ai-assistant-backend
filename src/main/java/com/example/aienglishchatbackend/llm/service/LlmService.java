@@ -7,15 +7,20 @@ import com.example.aienglishchatbackend.llm.client.LlmResponse;
 import com.example.aienglishchatbackend.llm.config.LlmProperties;
 import com.example.aienglishchatbackend.llm.dto.GrammarFeedback;
 import com.example.aienglishchatbackend.llm.prompt.PromptTemplates;
+import com.example.aienglishchatbackend.message.entity.Message;
+import com.example.aienglishchatbackend.message.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,22 +31,31 @@ public class LlmService {
     private final LlmClient llmClient;
     private final LlmProperties properties;
     private final ObjectMapper objectMapper;
+    private final MessageRepository messageRepository;
 
     public void generateReplyStreaming(
+            Long chatId,
             String userMessage,
-            List<LlmMessage> history,
             Consumer<String> onToken,
             Consumer<LlmResponse> onComplete,
             Consumer<Throwable> onError
     ) {
+        List<Message> history = messageRepository.findByChat_ChatIdOrderByCreatedAtDesc(chatId, PageRequest.of(0, properties.getContextSize()));
+        Collections.reverse(history);
+
         List<LlmMessage> messages = new ArrayList<>();
         messages.add(LlmMessage.builder()
                 .role(LlmMessage.Role.SYSTEM)
                 .content(PromptTemplates.CONVERSATION_SYSTEM)
                 .build());
-        if (history != null) {
-            messages.addAll(history);
+
+        for (Message msg : history) {
+            messages.add(LlmMessage.builder()
+                    .role(msg.getRole() == Message.Role.USER ? LlmMessage.Role.USER : LlmMessage.Role.ASSISTANT)
+                    .content(msg.getContent())
+                    .build());
         }
+        
         messages.add(LlmMessage.builder()
                 .role(LlmMessage.Role.USER)
                 .content(userMessage)
@@ -94,7 +108,7 @@ public class LlmService {
 
         LlmOptions options = LlmOptions.builder()
                 .temperature(0.3)
-                .maxTokens(1024)
+                .maxTokens(properties.getDefaults().getMaxTokens())
                 .stream(false)
                 .build();
 

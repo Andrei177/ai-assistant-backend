@@ -1,4 +1,5 @@
 spring.application.name=ai-english-chat-backend
+spring.profiles.active=dev
 
 spring.datasource.url=jdbc:postgresql://localhost:5432/db_name
 spring.datasource.username=user

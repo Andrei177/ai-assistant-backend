@@ -11,5 +11,8 @@ public class GroqProperties {
 
     private String baseUrl = "https://api.groq.com/openai/v1";
     private String apiKey = "";
-    private String model = "llama-3.3-70b-versatile";
+    private String model = "qwen/qwen3.8-27b";
+    private Integer maxTokens;
+    private String trustStorePath;
+    private String trustStorePassword;
 }

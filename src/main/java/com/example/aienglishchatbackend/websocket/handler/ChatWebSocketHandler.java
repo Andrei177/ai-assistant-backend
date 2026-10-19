@@ -1,6 +1,10 @@
 package com.example.aienglishchatbackend.websocket.handler;
 
 import com.example.aienglishchatbackend.chat.repository.ChatRepository;
+import com.example.aienglishchatbackend.llm.service.LlmService;
+import com.example.aienglishchatbackend.message.entity.Message;
+import com.example.aienglishchatbackend.message.repository.MessageRepository;
+import com.example.aienglishchatbackend.user.repository.UserRepository;
 import com.example.aienglishchatbackend.websocket.model.WebSocketErrorCode;
 import com.example.aienglishchatbackend.websocket.model.WebSocketMessageType;
 import com.example.aienglishchatbackend.websocket.service.WebSocketAuthService;
@@ -30,6 +34,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final WebSocketSender webSocketSender;
     private final ObjectMapper objectMapper;
     private final ChatRepository chatRepository;
+    private final LlmService llmService;
+    private final MessageRepository messageRepository;
+    private final UserRepository userRepository;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -119,7 +126,46 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         response.put("contentType", contentType);
         response.put("message", "Received message from user (session " + chatSession.getSessionId() + ")");
 
+        Message userMessage = new Message();
+        userMessage.setContent(content);
+        userMessage.setContentType(Message.ContentType.valueOf(contentType));
+        userMessage.setRole(Message.Role.USER);
+        userMessage.setChat(chatRepository.findById(chatId).orElseThrow());
+        userMessage.setUser(userRepository.findById(chatSession.getUserId()).orElseThrow());
+        messageRepository.save(userMessage);
+
         webSocketSender.send(chatSession.getSession(), response);
+
+        llmService.generateReplyStreaming(
+                chatId,
+                content,
+                token -> {
+                    Map<String, Object> tokenResponse = new LinkedHashMap<>();
+                    tokenResponse.put("type", WebSocketMessageType.MESSAGE_STREAM.getValue());
+                    tokenResponse.put("chatId", chatSession.getChatId());
+                    tokenResponse.put("token", token);
+                    webSocketSender.send(chatSession.getSession(), tokenResponse);
+                },
+                responseObj -> {
+                    Message assistantMessage = new Message();
+                    assistantMessage.setContent(responseObj.getContent());
+                    assistantMessage.setContentType(Message.ContentType.TEXT);
+                    assistantMessage.setRole(Message.Role.ASSISTANT);
+                    assistantMessage.setChat(chatRepository.findById(chatId).orElseThrow());
+                    messageRepository.save(assistantMessage);
+                    
+                    Map<String, Object> completeResponse = new LinkedHashMap<>();
+                    completeResponse.put("type", WebSocketMessageType.MESSAGE_STREAM_COMPLETED.getValue());
+                    completeResponse.put("chatId", chatSession.getChatId());
+                    completeResponse.put("model", responseObj.getModel());
+                    completeResponse.put("finishReason", responseObj.getFinishReason());
+                    webSocketSender.send(chatSession.getSession(), completeResponse);
+                },
+                throwable -> {
+                    log.error("LLM streaming error for session {}", chatSession.getSessionId(), throwable);
+                    sendError(chatSession.getSession(), WebSocketErrorCode.INVALID_MESSAGE, "LLM streaming failed");
+                }
+        );
     }
 
     private void sendError(WebSocketSession session, WebSocketErrorCode code, String message) {

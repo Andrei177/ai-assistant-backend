@@ -11,11 +11,12 @@ public class LlmProperties {
     private String provider = "ollama";
 
     private final Defaults defaults = new Defaults();
+    private int contextSize = 10;
 
     @Getter
     @Setter
     public static class Defaults {
-        private double temperature = 0.7;
-        private int maxTokens = 1024;
+        private Double temperature = 0.7;
+        private Integer maxTokens;
     }
 }

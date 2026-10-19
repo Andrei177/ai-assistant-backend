@@ -4,7 +4,10 @@ import com.example.aienglishchatbackend.chat.entity.Chat;
 import com.example.aienglishchatbackend.chat.repository.ChatRepository;
 import com.example.aienglishchatbackend.common.security.CustomUserDetailsService;
 import com.example.aienglishchatbackend.common.security.JwtService;
+import com.example.aienglishchatbackend.llm.service.LlmService;
+import com.example.aienglishchatbackend.message.repository.MessageRepository;
 import com.example.aienglishchatbackend.user.entity.User;
+import com.example.aienglishchatbackend.user.repository.UserRepository;
 import com.example.aienglishchatbackend.websocket.handler.ChatWebSocketHandler;
 import com.example.aienglishchatbackend.websocket.model.WebSocketErrorCode;
 import com.example.aienglishchatbackend.websocket.model.WebSocketMessageType;
@@ -45,6 +48,15 @@ class WebSocketChatTest {
     @Mock
     private ChatRepository chatRepository;
 
+    @Mock
+    private LlmService llmService;
+
+    @Mock
+    private MessageRepository messageRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
     private ObjectMapper objectMapper;
     private ChatSessionRegistry sessionRegistry;
     private WebSocketSender webSocketSender;
@@ -57,7 +69,7 @@ class WebSocketChatTest {
         sessionRegistry = new ChatSessionRegistry();
         webSocketSender = spy(new WebSocketSender(objectMapper));
         authService = new WebSocketAuthService(jwtService, userDetailsService, webSocketSender);
-        chatWebSocketHandler = new ChatWebSocketHandler(sessionRegistry, authService, webSocketSender, objectMapper, chatRepository);
+        chatWebSocketHandler = new ChatWebSocketHandler(sessionRegistry, authService, webSocketSender, objectMapper, chatRepository, llmService, messageRepository, userRepository);
 
         lenient().when(webSocketSession.getId()).thenReturn("test-session-1");
         lenient().when(webSocketSession.isOpen()).thenReturn(true);
@@ -133,7 +145,11 @@ class WebSocketChatTest {
         chatSession.setAuthenticated(true);
         chatSession.setUserId(1L);
 
-        when(chatRepository.findByChatIdAndUserUserId(12L, 1L)).thenReturn(Optional.of(new Chat()));
+        Chat mockChat = new Chat();
+        mockChat.setChatId(12L);
+        when(chatRepository.findByChatIdAndUserUserId(12L, 1L)).thenReturn(Optional.of(mockChat));
+        when(chatRepository.findById(12L)).thenReturn(Optional.of(mockChat));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(new User()));
 
         String messageJson = "{\"type\":\"SEND_MESSAGE\",\"chatId\":12,\"content\":\"Hello\",\"contentType\":\"TEXT\"}";
         chatWebSocketHandler.handleTextMessage(webSocketSession, new TextMessage(messageJson));
@@ -148,6 +164,8 @@ class WebSocketChatTest {
         assertEquals("Hello", response.get("content"));
         assertEquals("TEXT", response.get("contentType"));
         assertEquals("Received message from user (session test-session-1)", response.get("message"));
+
+        verify(llmService).generateReplyStreaming(eq(12L), eq("Hello"), any(), any(), any());
     }
 
     @Test
