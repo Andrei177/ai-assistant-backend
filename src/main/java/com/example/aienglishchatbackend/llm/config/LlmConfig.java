@@ -1,8 +1,10 @@
 package com.example.aienglishchatbackend.llm.config;
 
 import com.example.aienglishchatbackend.llm.client.LlmClient;
+import com.example.aienglishchatbackend.llm.client.gigachat.GigaChatLlmClient;
 import com.example.aienglishchatbackend.llm.client.groq.GroqLlmClient;
 import com.example.aienglishchatbackend.llm.client.ollama.OllamaLlmClient;
+import com.example.aienglishchatbackend.llm.config.GigaChatProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -13,7 +15,8 @@ import tools.jackson.databind.ObjectMapper;
 @EnableConfigurationProperties({
         LlmProperties.class,
         OllamaProperties.class,
-        GroqProperties.class
+        GroqProperties.class,
+        GigaChatProperties.class
 })
 public class LlmConfig {
 
@@ -35,5 +38,15 @@ public class LlmConfig {
             ObjectMapper objectMapper
     ) {
         return new GroqLlmClient(groqProperties, llmProperties, objectMapper);
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "llm.provider", havingValue = "gigachat")
+    public LlmClient gigaChatLlmClient(
+            GigaChatProperties gigaChatProperties,
+            LlmProperties llmProperties,
+            ObjectMapper objectMapper
+    ) {
+        return new GigaChatLlmClient(gigaChatProperties, llmProperties, objectMapper);
     }
 }

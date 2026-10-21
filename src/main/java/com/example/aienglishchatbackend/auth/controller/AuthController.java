@@ -44,7 +44,7 @@ public class AuthController {
         ResponseCookie refreshTokenCookie = setRefreshTokenCookie(loginUserRes.refreshToken());
 
         return ResponseEntity
-                .status(HttpStatus.CREATED)
+                .status(HttpStatus.OK)
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
                 .body(AuthMapper.authResponseInternalToAuthResponse(loginUserRes));
     }

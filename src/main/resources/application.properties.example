@@ -19,3 +19,7 @@ spring.jpa.properties.hibernate.format_sql=true
 # spring.jpa.open-in-view=false
 
 # spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+
+llm.defaults.temperature=0.7
+llm.defaults.max-tokens=1024
+llm.context-size=10
