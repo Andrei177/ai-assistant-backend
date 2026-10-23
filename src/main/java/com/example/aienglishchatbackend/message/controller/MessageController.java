@@ -1,7 +1,9 @@
 package com.example.aienglishchatbackend.message.controller;
 
+import com.example.aienglishchatbackend.message.dto.res.MessageFeedbackResponse;
 import com.example.aienglishchatbackend.message.dto.res.MessageResponse;
 import com.example.aienglishchatbackend.message.entity.Message;
+import com.example.aienglishchatbackend.message.entity.MessageFeedback;
 import com.example.aienglishchatbackend.message.mapper.MessageMapper;
 import com.example.aienglishchatbackend.message.service.MessageService;
 import com.example.aienglishchatbackend.user.entity.User;
@@ -34,5 +36,14 @@ public class MessageController {
             @AuthenticationPrincipal User user) {
         Message message = messageService.getMessageById(messageId, user);
         return ResponseEntity.ok(MessageMapper.messageToMessageResponse(message));
+    }
+
+    @GetMapping("/messages/{messageId}/feedback")
+    public ResponseEntity<MessageFeedbackResponse> getMessageFeedback(@PathVariable Long messageId, @AuthenticationPrincipal User user){
+        MessageFeedback feedback = messageService.getMessageFeedback(messageId, user);
+
+        return ResponseEntity.ok(
+                MessageMapper.messageFeedbackToMessageFeedbackResponse(feedback)
+        );
     }
 }

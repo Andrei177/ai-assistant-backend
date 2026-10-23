@@ -27,6 +27,7 @@ public final class PromptTemplates {
               "explanation": "<short explanation of the main mistakes in English>"
             }
             If the message is already correct, scores should be high and correctedText can equal the original.
+            The "explanation" field needs to be in Russian.
             """;
 
     public static final String TRANSLATE_SYSTEM = """

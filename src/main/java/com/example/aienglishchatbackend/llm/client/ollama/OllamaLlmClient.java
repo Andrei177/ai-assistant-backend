@@ -47,35 +47,9 @@ public class OllamaLlmClient implements LlmClient {
         this.ollamaProperties = ollamaProperties;
         this.llmProperties = llmProperties;
         this.objectMapper = objectMapper;
-        this.httpClient = createHttpClient(ollamaProperties);
-    }
-
-    private static HttpClient createHttpClient(OllamaProperties properties) {
-        HttpClient.Builder builder = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(10));
-
-        if (properties.getTrustStorePath() != null && !properties.getTrustStorePath().isBlank()) {
-            try {
-                KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-                char[] password = properties.getTrustStorePassword() != null
-                        ? properties.getTrustStorePassword().toCharArray()
-                        : null;
-                try (FileInputStream fis = new FileInputStream(properties.getTrustStorePath())) {
-                    keyStore.load(fis, password);
-                }
-
-                TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-                tmf.init(keyStore);
-
-                SSLContext sslContext = SSLContext.getInstance("TLS");
-                sslContext.init(null, tmf.getTrustManagers(), null);
-                builder.sslContext(sslContext);
-            } catch (Exception e) {
-                log.error("Failed to configure custom trust store for Ollama client", e);
-            }
-        }
-
-        return builder.build();
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
     }
 
     @Override

@@ -12,10 +12,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GrammarFeedback {
-    private int overallScore;
-    private int grammarScore;
-    private int vocabularyScore;
-    private int naturalnessScore;
+    private Short overallScore;
+    private Short grammarScore;
+    private Short vocabularyScore;
+    private Short naturalnessScore;
     private String correctedText;
     private String explanation;
 }

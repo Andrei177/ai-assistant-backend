@@ -118,14 +118,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         String content = rootNode.hasNonNull("content") ? rootNode.get("content").asText() : "";
         String contentType = rootNode.hasNonNull("contentType") ? rootNode.get("contentType").asText() : "TEXT";
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("type", WebSocketMessageType.MESSAGE_ACCEPTED.getValue());
-        response.put("chatId", chatSession.getChatId());
-        response.put("userId", chatSession.getUserId());
-        response.put("content", content);
-        response.put("contentType", contentType);
-        response.put("message", "Received message from user (session " + chatSession.getSessionId() + ")");
-
         Message userMessage = new Message();
         userMessage.setContent(content);
         userMessage.setContentType(Message.ContentType.valueOf(contentType));
@@ -133,6 +125,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         userMessage.setChat(chatRepository.findById(chatId).orElseThrow());
         userMessage.setUser(userRepository.findById(chatSession.getUserId()).orElseThrow());
         messageRepository.save(userMessage);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("type", WebSocketMessageType.MESSAGE_ACCEPTED.getValue());
+        response.put("chatId", chatSession.getChatId());
+        response.put("userId", chatSession.getUserId());
+        response.put("content", content);
+        response.put("messageId", userMessage.getMessageId());
+        response.put("contentType", contentType);
+        response.put("message", "Received message from user (session " + chatSession.getSessionId() + ")");
 
         webSocketSender.send(chatSession.getSession(), response);
 
