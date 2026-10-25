@@ -4,6 +4,7 @@ import com.example.aienglishchatbackend.chat.service.ChatService;
 import com.example.aienglishchatbackend.common.exception.ResourceNotFound;
 import com.example.aienglishchatbackend.llm.dto.GrammarFeedback;
 import com.example.aienglishchatbackend.llm.service.LlmService;
+import com.example.aienglishchatbackend.message.dto.res.TranslateResponse;
 import com.example.aienglishchatbackend.message.entity.Message;
 import com.example.aienglishchatbackend.message.entity.MessageFeedback;
 import com.example.aienglishchatbackend.message.repository.MessageFeedbackRepository;
@@ -64,5 +65,13 @@ public class MessageService {
                 .build();
 
         return messageFeedbackRepository.save(msgFeedback);
+    }
+
+    public TranslateResponse translateMessage(Long messageId, String targetLanguage, User user){
+        Message message = getMessageById(messageId, user);
+
+        String translated = llmService.translate(message.getContent(), targetLanguage);
+
+        return new TranslateResponse(messageId, message.getContent(), translated, targetLanguage);
     }
 }

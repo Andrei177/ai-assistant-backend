@@ -1,7 +1,9 @@
 package com.example.aienglishchatbackend.message.controller;
 
+import com.example.aienglishchatbackend.message.dto.req.TranslateRequest;
 import com.example.aienglishchatbackend.message.dto.res.MessageFeedbackResponse;
 import com.example.aienglishchatbackend.message.dto.res.MessageResponse;
+import com.example.aienglishchatbackend.message.dto.res.TranslateResponse;
 import com.example.aienglishchatbackend.message.entity.Message;
 import com.example.aienglishchatbackend.message.entity.MessageFeedback;
 import com.example.aienglishchatbackend.message.mapper.MessageMapper;
@@ -44,6 +46,13 @@ public class MessageController {
 
         return ResponseEntity.ok(
                 MessageMapper.messageFeedbackToMessageFeedbackResponse(feedback)
+        );
+    }
+
+    @PostMapping("/messages/{messageId}/translate")
+    public ResponseEntity<TranslateResponse> translateMessage(@PathVariable Long messageId, @RequestBody TranslateRequest req, @AuthenticationPrincipal User user){
+        return ResponseEntity.ok(
+                messageService.translateMessage(messageId, req.targetLanguage(), user)
         );
     }
 }
