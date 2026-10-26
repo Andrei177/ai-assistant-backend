@@ -10,7 +10,7 @@ public class MessageMapper {
         return new MessageResponse(
             message.getMessageId(),
             message.getContent(),
-            message.getContentType(),
+            message.getContentType(), message.getAudioUrl(),
             message.getRole(),
             message.getTranscription(),
             message.getCreatedAt()

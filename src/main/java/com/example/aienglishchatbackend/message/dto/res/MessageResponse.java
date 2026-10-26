@@ -7,6 +7,7 @@ public record MessageResponse(
     Long messageId,
     String content,
     Message.ContentType contentType,
+    String audioUrl,
     Message.Role role,
     String transcription,
     LocalDateTime createdAt
