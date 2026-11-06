@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 public record MessageResponse(
     Long messageId,
+    Long chatId,
     String content,
     Message.ContentType contentType,
     String audioUrl,

@@ -3,6 +3,7 @@ package com.example.aienglishchatbackend.websocket.handler;
 import com.example.aienglishchatbackend.chat.repository.ChatRepository;
 import com.example.aienglishchatbackend.llm.service.LlmService;
 import com.example.aienglishchatbackend.message.entity.Message;
+import com.example.aienglishchatbackend.message.mapper.MessageMapper;
 import com.example.aienglishchatbackend.message.repository.MessageRepository;
 import com.example.aienglishchatbackend.user.repository.UserRepository;
 import com.example.aienglishchatbackend.websocket.model.WebSocketErrorCode;
@@ -134,12 +135,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("type", WebSocketMessageType.MESSAGE_ACCEPTED.getValue());
-        response.put("chatId", chatSession.getChatId());
-        response.put("userId", chatSession.getUserId());
-        response.put("content", content);
-        response.put("messageId", userMessage.getMessageId());
-        response.put("contentType", contentType);
-        response.put("message", "Received message from user (session " + chatSession.getSessionId() + ")");
+        response.put("info", "Received message from user (session " + chatSession.getSessionId() + ")");
+        response.put("message", MessageMapper.messageToMessageResponse(userMessage));
+
 
         webSocketSender.send(chatSession.getSession(), response);
 
@@ -164,6 +162,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     Map<String, Object> completeResponse = new LinkedHashMap<>();
                     completeResponse.put("type", WebSocketMessageType.MESSAGE_STREAM_COMPLETED.getValue());
                     completeResponse.put("chatId", chatSession.getChatId());
+                    completeResponse.put("message", MessageMapper.messageToMessageResponse(assistantMessage));
                     completeResponse.put("model", responseObj.getModel());
                     completeResponse.put("finishReason", responseObj.getFinishReason());
                     webSocketSender.send(chatSession.getSession(), completeResponse);

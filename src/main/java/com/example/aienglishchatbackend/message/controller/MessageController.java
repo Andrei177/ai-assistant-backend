@@ -43,7 +43,7 @@ public class MessageController {
             @AuthenticationPrincipal User user,
             Pageable pageable) {
         Page<Message> messages = messageService.getMessagesByChatId(chatId, user, pageable);
-        return ResponseEntity.ok(messages.map(MessageMapper::messageToMessageResponse));
+        return ResponseEntity.ok(messages.map(message -> MessageMapper.messageToMessageResponse(message, chatId)));
     }
 
     @GetMapping("/messages/{messageId}")

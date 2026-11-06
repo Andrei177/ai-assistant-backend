@@ -9,11 +9,23 @@ public class MessageMapper {
     public static MessageResponse messageToMessageResponse(Message message) {
         return new MessageResponse(
             message.getMessageId(),
+            message.getChat().getChatId(),
             message.getContent(),
             message.getContentType(), message.getAudioUrl(),
             message.getRole(),
             message.getTranscription(),
             message.getCreatedAt()
+        );
+    }
+    public static MessageResponse messageToMessageResponse(Message message, Long chatId) {
+        return new MessageResponse(
+                message.getMessageId(),
+                chatId,
+                message.getContent(),
+                message.getContentType(), message.getAudioUrl(),
+                message.getRole(),
+                message.getTranscription(),
+                message.getCreatedAt()
         );
     }
 
