@@ -24,7 +24,7 @@ public final class PromptTemplates {
               "vocabularyScore": <0-100>,
               "naturalnessScore": <0-100>,
               "correctedText": "<corrected version of the user's message>",
-              "explanation": "<short explanation of the main mistakes in English>"
+              "explanation": "<a brief explanation of the main errors in the English-language message, along with a short note on what was done well>"
             }
             If the message is already correct, scores should be high and correctedText can equal the original.
             The "explanation" field needs to be in Russian.
